@@ -1,56 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
-
-const students = [
-  {
-    id: 1,
-    name: "Aarav Sharma",
-    grade: "10th",
-    overallProgress: 82,
-    averageScore: 85,
-    subjects: [
-      { name: "Mathematics", score: 90, progress: 88 },
-      { name: "Physics", score: 80, progress: 75 },
-      { name: "Chemistry", score: 85, progress: 85 },
-      { name: "English", score: 72, progress: 70 },
-    ],
-    strengths: ["Strong in Math", "Good problem-solving"],
-    weaknesses: ["English comprehension", "Physics concepts"],
-    recommendations: ["Focus on English reading", "Practice Physics problems"],
-  },
-  {
-    id: 2,
-    name: "Priya Verma",
-    grade: "9th",
-    overallProgress: 78,
-    averageScore: 80,
-    subjects: [
-      { name: "Mathematics", score: 85, progress: 82 },
-      { name: "Physics", score: 75, progress: 70 },
-      { name: "Chemistry", score: 80, progress: 78 },
-      { name: "English", score: 78, progress: 75 },
-    ],
-    strengths: ["Consistent performance", "Good in Chemistry"],
-    weaknesses: ["Physics basics", "English writing"],
-    recommendations: ["Review Physics fundamentals", "Improve writing skills"],
-  },
-  {
-    id: 3,
-    name: "Rahul Singh",
-    grade: "11th",
-    overallProgress: 94,
-    averageScore: 92,
-    subjects: [
-      { name: "Mathematics", score: 95, progress: 96 },
-      { name: "Physics", score: 90, progress: 92 },
-      { name: "Chemistry", score: 92, progress: 94 },
-      { name: "English", score: 88, progress: 90 },
-    ],
-    strengths: ["Excellent in all subjects", "High motivation"],
-    weaknesses: ["None significant"],
-    recommendations: ["Continue current pace", "Explore advanced topics"],
-  },
-];
 
 function ProgressBar({ percent, color = "#38a169" }) {
   return (
@@ -76,8 +25,162 @@ function ProgressBar({ percent, color = "#38a169" }) {
 }
 
 function ReportGenerator() {
-  const [selectedStudent, setSelectedStudent] = useState(students[0]);
+  const [students, setStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [generated, setGenerated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/reports/students", {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setStudents(data.students || data);
+          setSelectedStudent(data.students ? data.students[0] : data[0]);
+        } else {
+          // Fallback to mock data if API fails
+          const mockStudents = [
+            {
+              id: 1,
+              name: "Aarav Sharma",
+              grade: "10th",
+              overallProgress: 82,
+              averageScore: 85,
+              subjects: [
+                { name: "Mathematics", score: 90, progress: 88 },
+                { name: "Physics", score: 80, progress: 75 },
+                { name: "Chemistry", score: 85, progress: 85 },
+                { name: "English", score: 72, progress: 70 },
+              ],
+              strengths: ["Strong in Math", "Good problem-solving"],
+              weaknesses: ["English comprehension", "Physics concepts"],
+              recommendations: [
+                "Focus on English reading",
+                "Practice Physics problems",
+              ],
+            },
+            {
+              id: 2,
+              name: "Priya Verma",
+              grade: "9th",
+              overallProgress: 78,
+              averageScore: 80,
+              subjects: [
+                { name: "Mathematics", score: 85, progress: 82 },
+                { name: "Physics", score: 75, progress: 70 },
+                { name: "Chemistry", score: 80, progress: 78 },
+                { name: "English", score: 78, progress: 75 },
+              ],
+              strengths: ["Consistent performance", "Good in Chemistry"],
+              weaknesses: ["Physics basics", "English writing"],
+              recommendations: [
+                "Review Physics fundamentals",
+                "Improve writing skills",
+              ],
+            },
+            {
+              id: 3,
+              name: "Rahul Singh",
+              grade: "11th",
+              overallProgress: 94,
+              averageScore: 92,
+              subjects: [
+                { name: "Mathematics", score: 95, progress: 96 },
+                { name: "Physics", score: 90, progress: 92 },
+                { name: "Chemistry", score: 92, progress: 94 },
+                { name: "English", score: 88, progress: 90 },
+              ],
+              strengths: ["Excellent in all subjects", "High motivation"],
+              weaknesses: ["None significant"],
+              recommendations: [
+                "Continue current pace",
+                "Explore advanced topics",
+              ],
+            },
+          ];
+          setStudents(mockStudents);
+          setSelectedStudent(mockStudents[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching students:", error);
+        // Fallback to mock data
+        const mockStudents = [
+          {
+            id: 1,
+            name: "Aarav Sharma",
+            grade: "10th",
+            overallProgress: 82,
+            averageScore: 85,
+            subjects: [
+              { name: "Mathematics", score: 90, progress: 88 },
+              { name: "Physics", score: 80, progress: 75 },
+              { name: "Chemistry", score: 85, progress: 85 },
+              { name: "English", score: 72, progress: 70 },
+            ],
+            strengths: ["Strong in Math", "Good problem-solving"],
+            weaknesses: ["English comprehension", "Physics concepts"],
+            recommendations: [
+              "Focus on English reading",
+              "Practice Physics problems",
+            ],
+          },
+          {
+            id: 2,
+            name: "Priya Verma",
+            grade: "9th",
+            overallProgress: 78,
+            averageScore: 80,
+            subjects: [
+              { name: "Mathematics", score: 85, progress: 82 },
+              { name: "Physics", score: 75, progress: 70 },
+              { name: "Chemistry", score: 80, progress: 78 },
+              { name: "English", score: 78, progress: 75 },
+            ],
+            strengths: ["Consistent performance", "Good in Chemistry"],
+            weaknesses: ["Physics basics", "English writing"],
+            recommendations: [
+              "Review Physics fundamentals",
+              "Improve writing skills",
+            ],
+          },
+          {
+            id: 3,
+            name: "Rahul Singh",
+            grade: "11th",
+            overallProgress: 94,
+            averageScore: 92,
+            subjects: [
+              { name: "Mathematics", score: 95, progress: 96 },
+              { name: "Physics", score: 90, progress: 92 },
+              { name: "Chemistry", score: 92, progress: 94 },
+              { name: "English", score: 88, progress: 90 },
+            ],
+            strengths: ["Excellent in all subjects", "High motivation"],
+            weaknesses: ["None significant"],
+            recommendations: [
+              "Continue current pace",
+              "Explore advanced topics",
+            ],
+          },
+        ];
+        setStudents(mockStudents);
+        setSelectedStudent(mockStudents[0]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   const handleStudentChange = (e) => {
     const student = students.find((s) => s.id === parseInt(e.target.value));
@@ -135,51 +238,59 @@ function ReportGenerator() {
             marginBottom: 32,
           }}
         >
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ fontWeight: 600, color: "#2b6cb0", fontSize: 18 }}>
-              Select Student
-            </label>
-            <select
-              value={selectedStudent.id}
-              onChange={handleStudentChange}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 8,
-                border: "1.5px solid #e3f0ff",
-                fontWeight: 600,
-                color: "#225080",
-                marginTop: 8,
-                fontSize: 16,
-              }}
-            >
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.name} - {student.grade}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={handleGenerate}
-            style={{
-              width: "100%",
-              padding: "14px 0",
-              background: "#2b6cb0",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-              fontWeight: 700,
-              fontSize: 16,
-              cursor: "pointer",
-              boxShadow: "0 2px 8px #2b6cb033",
-              transition: "all 0.2s",
-            }}
-          >
-            Generate Report
-          </button>
+          {loading ? (
+            <div>Loading students...</div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 24 }}>
+                <label
+                  style={{ fontWeight: 600, color: "#2b6cb0", fontSize: 18 }}
+                >
+                  Select Student
+                </label>
+                <select
+                  value={selectedStudent?.id || ""}
+                  onChange={handleStudentChange}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    border: "1.5px solid #e3f0ff",
+                    fontWeight: 600,
+                    color: "#225080",
+                    marginTop: 8,
+                    fontSize: 16,
+                  }}
+                >
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.name} - {student.grade}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleGenerate}
+                style={{
+                  width: "100%",
+                  padding: "14px 0",
+                  background: "#2b6cb0",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px #2b6cb033",
+                  transition: "all 0.2s",
+                }}
+              >
+                Generate Report
+              </button>
+            </>
+          )}
         </div>
-        {generated && (
+        {generated && selectedStudent && (
           <div
             style={{
               background: "#fff",
@@ -233,7 +344,7 @@ function ReportGenerator() {
                   Subject Performance
                 </div>
                 {selectedStudent.subjects.map((subj, idx) => (
-                  <div key={idx} style={{ marginBottom: 12 }}>
+                  <div key={subj._id || idx} style={{ marginBottom: 12 }}>
                     <div
                       style={{
                         fontWeight: 700,

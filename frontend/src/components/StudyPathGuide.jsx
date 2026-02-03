@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
 
 const subjects = [
@@ -172,11 +172,45 @@ const studyPaths = {
 function StudyPathGuide() {
   const [selectedSubject, setSelectedSubject] = useState(subjects[0]);
   const [path, setPath] = useState(studyPaths[subjects[0]]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchStudyPath = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+          `/api/study-paths?subject=${selectedSubject}`,
+          {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPath(data.studyPath || data);
+        } else {
+          // Fallback to mock data if API fails
+          setPath(studyPaths[selectedSubject]);
+        }
+      } catch (error) {
+        console.error("Error fetching study path:", error);
+        // Fallback to mock data
+        setPath(studyPaths[selectedSubject]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudyPath();
+  }, [selectedSubject]);
 
   const handleSubjectChange = (e) => {
     const subj = e.target.value;
     setSelectedSubject(subj);
-    setPath(studyPaths[subj]);
   };
 
   const toggleCompleted = (stepIdx) => {
@@ -261,107 +295,121 @@ function StudyPathGuide() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: 24 }}>
-            <div
-              style={{
-                fontWeight: 700,
-                color: "#2b6cb0",
-                fontSize: 18,
-                marginBottom: 8,
-              }}
-            >
-              Progress
-            </div>
-            <div
-              style={{
-                background: "#e3f0ff",
-                borderRadius: 8,
-                height: 20,
-                width: "100%",
-                marginBottom: 6,
-              }}
-            >
-              <div
-                style={{
-                  width: `${progress}%`,
-                  background: "#38a169",
-                  height: "100%",
-                  borderRadius: 8,
-                  transition: "width 0.5s",
-                }}
-              ></div>
-            </div>
-            <div
-              style={{ color: "#38a169", fontWeight: 700, textAlign: "center" }}
-            >
-              {progress}% Complete ({completedSteps}/{path.length} steps)
-            </div>
-          </div>
-          <div>
-            <div
-              style={{
-                fontWeight: 700,
-                color: "#2b6cb0",
-                fontSize: 18,
-                marginBottom: 16,
-              }}
-            >
-              Study Path
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {path.map((step, idx) => (
+          {loading ? (
+            <div>Loading study path...</div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 24 }}>
                 <div
-                  key={idx}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                    padding: "16px",
-                    borderRadius: 12,
-                    background: step.completed ? "#e3f0ff" : "#fff",
-                    border: "1.5px solid #e3f0ff",
-                    boxShadow: step.completed ? "0 2px 8px #2b6cb022" : "none",
-                    transition: "all 0.2s",
+                    fontWeight: 700,
+                    color: "#2b6cb0",
+                    fontSize: 18,
+                    marginBottom: 8,
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={step.completed}
-                    onChange={() => toggleCompleted(idx)}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      cursor: "pointer",
-                    }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        color: "#2b6cb0",
-                        fontSize: 16,
-                        marginBottom: 4,
-                      }}
-                    >
-                      Step {step.step}: {step.title}
-                    </div>
-                    <ul
-                      style={{
-                        color: "#225080",
-                        fontWeight: 500,
-                        paddingLeft: 18,
-                        margin: 0,
-                      }}
-                    >
-                      {step.subtopics.map((sub, i) => (
-                        <li key={i}>{sub}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  Progress
                 </div>
-              ))}
-            </div>
-          </div>
+                <div
+                  style={{
+                    background: "#e3f0ff",
+                    borderRadius: 8,
+                    height: 20,
+                    width: "100%",
+                    marginBottom: 6,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${progress}%`,
+                      background: "#38a169",
+                      height: "100%",
+                      borderRadius: 8,
+                      transition: "width 0.5s",
+                    }}
+                  ></div>
+                </div>
+                <div
+                  style={{
+                    color: "#38a169",
+                    fontWeight: 700,
+                    textAlign: "center",
+                  }}
+                >
+                  {progress}% Complete ({completedSteps}/{path.length} steps)
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: "#2b6cb0",
+                    fontSize: 18,
+                    marginBottom: 16,
+                  }}
+                >
+                  Study Path
+                </div>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                >
+                  {path.map((step, idx) => (
+                    <div
+                      key={step._id || idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 16,
+                        padding: "16px",
+                        borderRadius: 12,
+                        background: step.completed ? "#e3f0ff" : "#fff",
+                        border: "1.5px solid #e3f0ff",
+                        boxShadow: step.completed
+                          ? "0 2px 8px #2b6cb022"
+                          : "none",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={step.completed}
+                        onChange={() => toggleCompleted(idx)}
+                        style={{
+                          width: 20,
+                          height: 20,
+                          cursor: "pointer",
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontWeight: 700,
+                            color: "#2b6cb0",
+                            fontSize: 16,
+                            marginBottom: 4,
+                          }}
+                        >
+                          Step {step.step}: {step.title}
+                        </div>
+                        <ul
+                          style={{
+                            color: "#225080",
+                            fontWeight: 500,
+                            paddingLeft: 18,
+                            margin: 0,
+                          }}
+                        >
+                          {step.subtopics.map((sub, i) => (
+                            <li key={i}>{sub}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </section>

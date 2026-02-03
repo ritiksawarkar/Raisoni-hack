@@ -18,7 +18,7 @@ function Footer() {
   );
 }
 
-function SignUp() {
+function SignUp({ onLogin }) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -45,20 +45,33 @@ function SignUp() {
       setError("Passwords do not match.");
       return;
     }
-    // Store user data in localStorage
-    localStorage.setItem(
-      "user_" + form.email,
-      JSON.stringify({
+    // Call backend API
+    fetch("http://localhost:5000/api/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
         name: form.name,
         email: form.email,
         password: form.password,
       }),
-    );
-    // Simulate success
-    setSuccess("Account created successfully!");
-    setForm({ name: "", email: "", password: "", confirmPassword: "" });
-    // Redirect to login page after 1 second
-    setTimeout(() => navigate("/auth"), 1000);
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.token) {
+          setSuccess("Account created successfully!");
+          localStorage.setItem("token", data.token);
+          onLogin(data.user.name);
+          setForm({ name: "", email: "", password: "", confirmPassword: "" });
+          setTimeout(() => navigate("/"), 1000);
+        } else {
+          setError(data.message || "Signup failed");
+        }
+      })
+      .catch(() => {
+        setError("Network error");
+      });
   };
 
   return (

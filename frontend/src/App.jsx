@@ -1,5 +1,5 @@
 import { Routes, Route, Link, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StudentProgressGapFinder from "./components/StudentProgressGapFinder";
 import Login from "./components/Login";
 import LessonDifficultyAdjuster from "./components/LessonDifficultyAdjuster";
@@ -20,13 +20,13 @@ function ProtectedRoute({ user, children }) {
 }
 
 // Header component
-function Header({ user }) {
+function Header({ user, setUser }) {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleLogout = () => {
-    // Since setUser is not passed, perhaps reload or something, but for now, alert
-    alert("Logged out!");
-    window.location.reload(); // Simple logout
+    localStorage.removeItem("token");
+    setUser(null);
+    setShowDropdown(false);
   };
 
   return (
@@ -145,85 +145,52 @@ function Footer() {
 function App() {
   const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Verify token with backend
+      fetch("http://localhost:5000/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.name) {
+            setUser(data.name);
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+        });
+    }
+  }, []);
+
   return (
     <div className="main-container">
-      <Header user={user} />
+      <Header user={user} setUser={setUser} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
           path="/progress-gap-finder"
-          element={
-            <ProtectedRoute user={user}>
-              <StudentProgressGapFinder />
-            </ProtectedRoute>
-          }
+          element={<StudentProgressGapFinder />}
         />
         <Route path="/auth" element={<Login onLogin={setUser} />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signup" element={<SignUp onLogin={setUser} />} />
         <Route
           path="/lesson-difficulty"
-          element={
-            <ProtectedRoute user={user}>
-              <LessonDifficultyAdjuster />
-            </ProtectedRoute>
-          }
+          element={<LessonDifficultyAdjuster />}
         />
         <Route
           path="/performance-analytics"
-          element={
-            <ProtectedRoute user={user}>
-              <PerformanceAnalytics />
-            </ProtectedRoute>
-          }
+          element={<PerformanceAnalytics />}
         />
-        <Route
-          path="/mock-test-creator"
-          element={
-            <ProtectedRoute user={user}>
-              <MockTestCreator />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/study-path-guide"
-          element={
-            <ProtectedRoute user={user}>
-              <StudyPathGuide />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/progress-dashboard"
-          element={
-            <ProtectedRoute user={user}>
-              <ProgressDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/report-generator"
-          element={
-            <ProtectedRoute user={user}>
-              <ReportGenerator />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/study-matchmaker"
-          element={
-            <ProtectedRoute user={user}>
-              <StudyMatchmaker />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/data-privacy-shield"
-          element={
-            <ProtectedRoute user={user}>
-              <DataPrivacyShield />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/mock-test-creator" element={<MockTestCreator />} />
+        <Route path="/study-path-guide" element={<StudyPathGuide />} />
+        <Route path="/progress-dashboard" element={<ProgressDashboard />} />
+        <Route path="/report-generator" element={<ReportGenerator />} />
+        <Route path="/study-matchmaker" element={<StudyMatchmaker />} />
+        <Route path="/data-privacy-shield" element={<DataPrivacyShield />} />
       </Routes>
       <Footer />
     </div>

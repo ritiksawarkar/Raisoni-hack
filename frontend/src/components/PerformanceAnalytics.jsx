@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
 
 const mockAnalytics = {
@@ -76,6 +76,43 @@ function SimpleBarChart({ data, labels }) {
 }
 
 function PerformanceAnalytics() {
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/analytics", {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setAnalytics(data);
+        } else {
+          // Fallback to mock data if API fails
+          setAnalytics(mockAnalytics);
+        }
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        // Fallback to mock data
+        setAnalytics(mockAnalytics);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+
+  const data = analytics || mockAnalytics;
+
   return (
     <section
       style={{
@@ -152,25 +189,19 @@ function PerformanceAnalytics() {
                   marginBottom: 10,
                 }}
               >
-                {mockAnalytics.averageScore}
+                {data.averageScore}
               </div>
               <div style={{ fontWeight: 600, color: "#444", marginBottom: 6 }}>
                 Best Subject:{" "}
-                <span style={{ color: "#2b6cb0" }}>
-                  {mockAnalytics.bestSubject}
-                </span>
+                <span style={{ color: "#2b6cb0" }}>{data.bestSubject}</span>
               </div>
               <div style={{ fontWeight: 600, color: "#444" }}>
                 Weakest Subject:{" "}
-                <span style={{ color: "#e53e3e" }}>
-                  {mockAnalytics.weakestSubject}
-                </span>
+                <span style={{ color: "#e53e3e" }}>{data.weakestSubject}</span>
               </div>
               <div style={{ fontWeight: 600, color: "#444", marginTop: 10 }}>
                 Improvement:{" "}
-                <span style={{ color: "#2b6cb0" }}>
-                  +{mockAnalytics.improvement}%
-                </span>
+                <span style={{ color: "#2b6cb0" }}>+{data.improvement}%</span>
               </div>
             </div>
             <div style={{ flex: 2, minWidth: 260 }}>
@@ -184,10 +215,7 @@ function PerformanceAnalytics() {
               >
                 Score Trend
               </div>
-              <SimpleBarChart
-                data={mockAnalytics.scores}
-                labels={mockAnalytics.labels}
-              />
+              <SimpleBarChart data={data.scores} labels={data.labels} />
             </div>
           </div>
           <div style={{ marginTop: 18 }}>
@@ -210,7 +238,7 @@ function PerformanceAnalytics() {
                 margin: 0,
               }}
             >
-              {mockAnalytics.insights.map((insight, idx) => (
+              {data.insights.map((insight, idx) => (
                 <li key={idx} style={{ marginBottom: 6 }}>
                   {insight}
                 </li>

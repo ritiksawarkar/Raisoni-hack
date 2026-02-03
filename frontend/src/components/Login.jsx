@@ -39,23 +39,29 @@ function Login({ onLogin }) {
       setError("Please fill in all fields.");
       return;
     }
-    // Check localStorage for user
-    const userData = localStorage.getItem("user_" + form.email);
-    if (!userData) {
-      setError("Account not found. Please sign up first.");
-      return;
-    }
-    const user = JSON.parse(userData);
-    if (user.password !== form.password) {
-      setError("Incorrect password.");
-      return;
-    }
-    // Simulate login success
-    setSuccess("Login successful!");
-    onLogin(user.name);
-    setForm({ email: "", password: "" });
-    // Redirect to home
-    setTimeout(() => navigate("/"), 1000);
+    // Call backend API
+    fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: form.email, password: form.password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.token) {
+          setSuccess("Login successful!");
+          localStorage.setItem("token", data.token);
+          onLogin(data.user.name);
+          setForm({ email: "", password: "" });
+          setTimeout(() => navigate("/"), 1000);
+        } else {
+          setError(data.message || "Login failed");
+        }
+      })
+      .catch(() => {
+        setError("Network error");
+      });
   };
 
   return (

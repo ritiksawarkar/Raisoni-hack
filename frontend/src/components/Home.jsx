@@ -7,7 +7,6 @@ const moduleLinks = [
     name: "Student Progress & Learning-Gap Finder",
     path: "/progress-gap-finder",
   },
-  { name: "Authentication and Authorization", path: "/auth" },
   { name: "Automatic Lesson Difficulty Adjuster", path: "/lesson-difficulty" },
   {
     name: "Automated Performance Analytics & Insight Generator",

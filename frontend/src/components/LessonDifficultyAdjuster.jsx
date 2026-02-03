@@ -1,34 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
 
 const mockLessons = [
   {
-    id: 1,
+    _id: 1,
     title: "Algebra: Linear Equations",
+    subject: "Mathematics",
     currentLevel: "Medium",
     recommendedLevel: "Hard",
     lastScore: 92,
     attempts: 3,
   },
   {
-    id: 2,
+    _id: 2,
     title: "Physics: Motion & Forces",
+    subject: "Physics",
     currentLevel: "Easy",
     recommendedLevel: "Medium",
     lastScore: 78,
     attempts: 2,
   },
   {
-    id: 3,
+    _id: 3,
     title: "English: Reading Comprehension",
+    subject: "English",
     currentLevel: "Hard",
     recommendedLevel: "Medium",
     lastScore: 61,
     attempts: 4,
   },
   {
-    id: 4,
+    _id: 4,
     title: "Chemistry: Acids & Bases",
+    subject: "Chemistry",
     currentLevel: "Medium",
     recommendedLevel: "Medium",
     lastScore: 80,
@@ -63,17 +67,44 @@ function LevelBadge({ level }) {
 }
 
 function LessonDifficultyAdjuster() {
-  const [lessons, setLessons] = useState(mockLessons);
+  const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [adjusted, setAdjusted] = useState({});
+
+  useEffect(() => {
+    const fetchLessons = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/lessons");
+        if (!response.ok) {
+          throw new Error("Failed to fetch lessons");
+        }
+        const data = await response.json();
+        if (data.length > 0) {
+          setLessons(data);
+        } else {
+          setLessons(mockLessons);
+        }
+      } catch (err) {
+        console.log("Using mock lessons data as fallback:", err.message);
+        setLessons(mockLessons);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLessons();
+  }, []);
 
   const handleAdjust = (id) => {
     setAdjusted((prev) => ({ ...prev, [id]: true }));
     setLessons((prev) =>
       prev.map((l) =>
-        l.id === id ? { ...l, currentLevel: l.recommendedLevel } : l,
+        l._id === id ? { ...l, currentLevel: l.recommendedLevel } : l,
       ),
     );
   };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <section
@@ -126,7 +157,7 @@ function LessonDifficultyAdjuster() {
         >
           {lessons.map((lesson) => (
             <div
-              key={lesson.id}
+              key={lesson._id || lesson.id}
               style={{
                 display: "flex",
                 alignItems: "center",

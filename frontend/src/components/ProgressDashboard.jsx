@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
 
 const studentData = {
@@ -103,8 +103,43 @@ function SimpleBarChart({ data, labels, color = "#2b6cb0" }) {
 
 function ProgressDashboard() {
   const [view, setView] = useState("student");
+  const [progressData, setProgressData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const data = view === "student" ? studentData : teacherData;
+  useEffect(() => {
+    const fetchProgressData = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/progress", {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setProgressData(data);
+        } else {
+          // Fallback to mock data if API fails
+          setProgressData({ student: studentData, teacher: teacherData });
+        }
+      } catch (error) {
+        console.error("Error fetching progress data:", error);
+        // Fallback to mock data
+        setProgressData({ student: studentData, teacher: teacherData });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProgressData();
+  }, []);
+
+  const mockData = { student: studentData, teacher: teacherData };
+  const data = progressData || mockData;
+  const currentData = view === "student" ? data.student : data.teacher;
 
   return (
     <section
@@ -187,7 +222,9 @@ function ProgressDashboard() {
               Teacher View
             </button>
           </div>
-          {view === "student" ? (
+          {loading ? (
+            <div>Loading progress data...</div>
+          ) : view === "student" ? (
             <div>
               <div
                 style={{
@@ -197,7 +234,7 @@ function ProgressDashboard() {
                   marginBottom: 16,
                 }}
               >
-                {data.name}'s Progress
+                {currentData.name}'s Progress
               </div>
               <div
                 style={{
@@ -213,11 +250,11 @@ function ProgressDashboard() {
                   >
                     Overall Progress
                   </div>
-                  <ProgressBar percent={data.overallProgress} />
+                  <ProgressBar percent={currentData.overallProgress} />
                   <div
                     style={{ color: "#38a169", fontWeight: 700, marginTop: 6 }}
                   >
-                    {data.overallProgress}%
+                    {currentData.overallProgress}%
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 200 }}>
@@ -227,8 +264,8 @@ function ProgressDashboard() {
                     Subject Scores
                   </div>
                   <SimpleBarChart
-                    data={data.subjects.map((s) => s.score)}
-                    labels={data.subjects.map((s) => s.name.slice(0, 3))}
+                    data={currentData.subjects.map((s) => s.score)}
+                    labels={currentData.subjects.map((s) => s.name.slice(0, 3))}
                     color="#f6ad55"
                   />
                 </div>
@@ -246,7 +283,7 @@ function ProgressDashboard() {
                     gap: 16,
                   }}
                 >
-                  {data.subjects.map((subj, idx) => (
+                  {currentData.subjects.map((subj, idx) => (
                     <div
                       key={idx}
                       style={{
@@ -288,7 +325,7 @@ function ProgressDashboard() {
                 <ul
                   style={{ color: "#225080", fontWeight: 600, paddingLeft: 18 }}
                 >
-                  {data.recentActivities.map((act, idx) => (
+                  {currentData.recentActivities.map((act, idx) => (
                     <li key={idx}>{act}</li>
                   ))}
                 </ul>
@@ -304,7 +341,7 @@ function ProgressDashboard() {
                   marginBottom: 16,
                 }}
               >
-                {data.name}'s Class Overview
+                {currentData.name}'s Class Overview
               </div>
               <div
                 style={{
@@ -323,7 +360,7 @@ function ProgressDashboard() {
                   <div
                     style={{ fontSize: 32, fontWeight: 800, color: "#38a169" }}
                   >
-                    {data.classAverage}%
+                    {currentData.classAverage}%
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 150 }}>
@@ -335,7 +372,7 @@ function ProgressDashboard() {
                   <div
                     style={{ fontSize: 32, fontWeight: 800, color: "#2b6cb0" }}
                   >
-                    {data.students}
+                    {currentData.students}
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 200 }}>
@@ -345,8 +382,8 @@ function ProgressDashboard() {
                     Subject Averages
                   </div>
                   <SimpleBarChart
-                    data={data.subjectAverages.map((s) => s.average)}
-                    labels={data.subjectAverages.map((s) =>
+                    data={currentData.subjectAverages.map((s) => s.average)}
+                    labels={currentData.subjectAverages.map((s) =>
                       s.subject.slice(0, 3),
                     )}
                     color="#e53e3e"
@@ -360,7 +397,7 @@ function ProgressDashboard() {
                   Top Performers
                 </div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  {data.topPerformers.map((student, idx) => (
+                  {currentData.topPerformers.map((student, idx) => (
                     <div
                       key={idx}
                       style={{
@@ -385,7 +422,7 @@ function ProgressDashboard() {
                 <ul
                   style={{ color: "#225080", fontWeight: 600, paddingLeft: 18 }}
                 >
-                  {data.recentFeedback.map((fb, idx) => (
+                  {currentData.recentFeedback.map((fb, idx) => (
                     <li key={idx}>{fb}</li>
                   ))}
                 </ul>
