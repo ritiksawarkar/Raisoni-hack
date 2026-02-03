@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./SignUp.css";
 
 function Footer() {
@@ -17,13 +18,14 @@ function Footer() {
   );
 }
 
-function Login() {
+function Login({ onLogin }) {
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,9 +39,23 @@ function Login() {
       setError("Please fill in all fields.");
       return;
     }
+    // Check localStorage for user
+    const userData = localStorage.getItem("user_" + form.email);
+    if (!userData) {
+      setError("Account not found. Please sign up first.");
+      return;
+    }
+    const user = JSON.parse(userData);
+    if (user.password !== form.password) {
+      setError("Incorrect password.");
+      return;
+    }
     // Simulate login success
     setSuccess("Login successful!");
+    onLogin(user.name);
     setForm({ email: "", password: "" });
+    // Redirect to home
+    setTimeout(() => navigate("/"), 1000);
   };
 
   return (

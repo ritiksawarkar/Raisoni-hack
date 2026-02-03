@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./SignUp.css";
 
 function Footer() {
@@ -26,6 +27,7 @@ function SignUp() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -43,9 +45,20 @@ function SignUp() {
       setError("Passwords do not match.");
       return;
     }
+    // Store user data in localStorage
+    localStorage.setItem(
+      "user_" + form.email,
+      JSON.stringify({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+      }),
+    );
     // Simulate success
     setSuccess("Account created successfully!");
     setForm({ name: "", email: "", password: "", confirmPassword: "" });
+    // Redirect to login page after 1 second
+    setTimeout(() => navigate("/auth"), 1000);
   };
 
   return (

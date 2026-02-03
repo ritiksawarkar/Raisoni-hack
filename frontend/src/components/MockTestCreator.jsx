@@ -62,6 +62,8 @@ function MockTestCreator() {
   const [selectedTopic, setSelectedTopic] = useState(topics[subjects[0]][0]);
   const [questionCount, setQuestionCount] = useState(3);
   const [showTest, setShowTest] = useState(false);
+  const [answers, setAnswers] = useState({});
+  const [score, setScore] = useState(null);
 
   const handleSubjectChange = (e) => {
     setSelectedSubject(e.target.value);
@@ -79,7 +81,24 @@ function MockTestCreator() {
   const handleGenerate = (e) => {
     e.preventDefault();
     setShowTest(true);
+    setAnswers({});
+    setScore(null);
   };
+
+  const handleAnswerChange = (qIdx, answer) => {
+    setAnswers((prev) => ({ ...prev, [qIdx]: answer }));
+  };
+
+  const handleSubmitQuiz = () => {
+    const questions = mockQuestions.slice(0, questionCount);
+    let correct = 0;
+    questions.forEach((q, idx) => {
+      if (answers[idx] === q.answer) correct++;
+    });
+    setScore(correct);
+  };
+
+  const questions = mockQuestions.slice(0, questionCount);
 
   return (
     <section
@@ -238,41 +257,98 @@ function MockTestCreator() {
                 marginBottom: 18,
               }}
             >
-              Mock Test Preview
+              Mock Test Quiz
             </div>
             <div style={{ color: "#444", fontWeight: 600, marginBottom: 10 }}>
               Subject:{" "}
               <span style={{ color: "#2b6cb0" }}>{selectedSubject}</span> |
               Topic: <span style={{ color: "#2b6cb0" }}>{selectedTopic}</span>
             </div>
-            <ol
-              style={{
-                paddingLeft: 22,
-                color: "#225080",
-                fontWeight: 600,
-                fontSize: 16,
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitQuiz();
               }}
             >
-              {mockQuestions.slice(0, questionCount).map((q, idx) => (
-                <li key={idx} style={{ marginBottom: 18 }}>
-                  <div style={{ marginBottom: 6 }}>{q.q}</div>
-                  <ul style={{ paddingLeft: 18, margin: 0 }}>
-                    {q.options.map((opt, i) => (
-                      <li
-                        key={i}
-                        style={{
-                          color: "#2b6cb0",
-                          fontWeight: 500,
-                          marginBottom: 2,
-                        }}
-                      >
-                        {opt}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ol>
+              <ol
+                style={{
+                  paddingLeft: 22,
+                  color: "#225080",
+                  fontWeight: 600,
+                  fontSize: 16,
+                }}
+              >
+                {questions.map((q, idx) => (
+                  <li key={idx} style={{ marginBottom: 18 }}>
+                    <div style={{ marginBottom: 6 }}>{q.q}</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                      }}
+                    >
+                      {q.options.map((opt, i) => (
+                        <label
+                          key={i}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name={`q${idx}`}
+                            value={opt}
+                            onChange={() => handleAnswerChange(idx, opt)}
+                            checked={answers[idx] === opt}
+                            style={{ margin: 0 }}
+                          />
+                          <span style={{ color: "#2b6cb0", fontWeight: 500 }}>
+                            {opt}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <button
+                type="submit"
+                style={{
+                  background: "#2b6cb0",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "12px 24px",
+                  fontWeight: 700,
+                  fontSize: 16,
+                  marginTop: 18,
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px #2b6cb033",
+                  transition: "all 0.2s",
+                }}
+              >
+                Submit Quiz
+              </button>
+            </form>
+            {score !== null && (
+              <div
+                style={{
+                  marginTop: 18,
+                  padding: 16,
+                  background: "#e3f0ff",
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  color: "#2b6cb0",
+                  textAlign: "center",
+                }}
+              >
+                Your Score: {score} / {questionCount} (
+                {Math.round((score / questionCount) * 100)}%)
+              </div>
+            )}
           </div>
         )}
       </div>

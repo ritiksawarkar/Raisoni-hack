@@ -242,7 +242,7 @@ body {
   margin-left: auto;
   margin-right: auto;
 
-  text-align: center;
+  text-align: left;
 }
 .how-section h2 {
   text-align: center;
@@ -251,10 +251,11 @@ body {
 }
 .how-list {
   max-width: 700px;
-  margin: 0 auto;
+  margin: 0;
   font-size: 1.1rem;
   color: #333;
   padding-left: 1.2rem;
+  text-align: left;
 }
 .how-list li {
   margin-bottom: 0.7rem;
